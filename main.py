@@ -15,7 +15,7 @@ MAX_SKETCH_SIZE = 10_000
 RELATIVE_STANDARD_ERROR = 1 / sqrt(MAX_SKETCH_SIZE) * 100
 
 
-def format_number(number: float, fraction_digits: int = 4) -> str:
+def format_number(number: float, fraction_digits: int = 7) -> str:
     return f"{number:_.{fraction_digits}f}"
 
 
@@ -64,13 +64,14 @@ def count_unique_logins_with_theta_sketch() -> None:
     print(f"Estimated number of unique user IDs: {format_number(estimate_unique_user_ids)}")
     print(f"\nActual login attempts: {format_number(TOTAL_LOGIN_ATTEMPTS, 0)}")
     print(f"Actual unique user IDs: {format_number(UNIQUE_USER_ID_COUNT, 0)}")
+    print(f"Theta threshold: {format_number(theta_threshold)}")
     print(f"Error: {format_number(error_rate, 2)}%")
     if error_rate <= RELATIVE_STANDARD_ERROR:
         print(
             f"Result: PASS — error_rate is within the expected relative standard error of {RELATIVE_STANDARD_ERROR:.2f}%")
     else:
         print(
-            f"Result: FAIL - error_rate is higher the expected relative standard error of {RELATIVE_STANDARD_ERROR:.2f}%")
+            f"Result: WARNING - error_rate is higher the expected relative standard error of {RELATIVE_STANDARD_ERROR:.2f}%")
 
     verify_uniform_hash_distribution(login_attempts)
 

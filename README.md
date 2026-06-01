@@ -47,16 +47,17 @@ python main.py
 --- Generating 10_025_000 login attempts ---
 
 --- Estimating number of unique login attempts (Theta Sketch) ---
-Estimated number of unique user IDs: 9_930_751.8772
+Estimated number of unique user IDs: 10_027_428.4006383
 
 Actual login attempts: 10_025_000
 Actual unique user IDs: 10_000_000
-Error: 0.69%
+Theta threshold: 0.0009973
+Error: 0.27%
 Result: PASS — error_rate is within the expected relative standard error of 1.00%
 
---- Hash Uniformity Test (Chi-Squared) ---
+--- Hash uniformity test (Chi-Squared) ---
 Samples: 10_000_000, Bins: 50
-Chi-squared statistic: 47.2351
-p-value: 0.5449
+Chi-squared statistic: 35.2483600
+p-value: 0.9301
 Result: PASS — hashes appear uniformly distributed (p > 0.05)
 ```
