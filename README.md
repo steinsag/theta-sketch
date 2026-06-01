@@ -9,7 +9,7 @@ The script simulates `UNIQUE_USER_ID_COUNT` login attempts (with `DUPLICATE_USER
 Theta Sketch to estimate the number of unique user IDs. It then compares the estimate against the actual count and
 reports the error rate.
 
-Additionally, it verifies that the underlying hash function (MurmurHash3) produces a uniform distribution across the
+Additionally, it verifies that the underlying hash function (xxHash 128 Bit) produces a uniform distribution across the
 hash space using a Chi-Squared test.
 
 ### Key concepts
@@ -44,16 +44,19 @@ python main.py
 ### Example output
 
 ```
-Estimated number of unique user IDs: 10098031.452088824
+--- Generating 10_025_000 login attempts ---
 
-Actual login attempts: 10025000
-Actual unique user IDs: 10000000
-Error: 0.98%
-Result: PASS — error_rate is within the expected relative standard error of 1.12%
+--- Estimating number of unique login attempts (Theta Sketch) ---
+Estimated number of unique user IDs: 9_930_751.8772
+
+Actual login attempts: 10_025_000
+Actual unique user IDs: 10_000_000
+Error: 0.69%
+Result: PASS — error_rate is within the expected relative standard error of 1.00%
 
 --- Hash Uniformity Test (Chi-Squared) ---
-Samples: 10000000, Bins: 50
-Chi-squared statistic: 47.2269
-p-value: 0.5453
+Samples: 10_000_000, Bins: 50
+Chi-squared statistic: 47.2351
+p-value: 0.5449
 Result: PASS — hashes appear uniformly distributed (p > 0.05)
 ```

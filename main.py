@@ -2,16 +2,21 @@ import random
 import uuid
 from math import sqrt
 
-import mmh3
 import numpy
+import xxhash
 from scipy import stats
 from sortedcontainers import SortedList
 
 UNIQUE_USER_ID_COUNT = 10_000_000
 DUPLICATE_USER_ID_COUNT = 25_000
+TOTAL_LOGIN_ATTEMPTS = UNIQUE_USER_ID_COUNT + DUPLICATE_USER_ID_COUNT
 MAX_HASH_SPACE = 2 ** 128
-MAX_SKETCH_SIZE = 8_000
+MAX_SKETCH_SIZE = 10_000
 RELATIVE_STANDARD_ERROR = 1 / sqrt(MAX_SKETCH_SIZE) * 100
+
+
+def format_number(number: float, fraction_digits: int = 4) -> str:
+    return f"{number:_.{fraction_digits}f}"
 
 
 def generate_login_attempts() -> list[str]:
@@ -21,9 +26,9 @@ def generate_login_attempts() -> list[str]:
 
 
 def hash_user_id_to_unit_interval(user_id: str) -> float:
-    h1 = mmh3.hash128(user_id, signed=False)
+    hash_value = xxhash.xxh128(user_id).intdigest()
 
-    return h1 / MAX_HASH_SPACE
+    return hash_value / MAX_HASH_SPACE
 
 
 def estimate_unique_count(retained_hashes: SortedList, theta_threshold: float) -> float:
@@ -32,7 +37,10 @@ def estimate_unique_count(retained_hashes: SortedList, theta_threshold: float) -
 
 
 def count_unique_logins_with_theta_sketch() -> None:
+    print(f"--- Generating {format_number(TOTAL_LOGIN_ATTEMPTS, 0)} login attempts ---")
     login_attempts = generate_login_attempts()
+
+    print(f"\n--- Estimating number of unique login attempts (Theta Sketch) ---")
     retained_hashes = SortedList()
     theta_threshold = 1.0
 
@@ -51,14 +59,12 @@ def count_unique_logins_with_theta_sketch() -> None:
             del retained_hashes[MAX_SKETCH_SIZE:]
 
     estimate_unique_user_ids = estimate_unique_count(retained_hashes, theta_threshold)
-    actual_login_attempts = len(login_attempts)
-    actual_unique_user_ids = len(set(login_attempts))
-    error_rate = (abs(actual_unique_user_ids - estimate_unique_user_ids) / actual_unique_user_ids) * 100
+    error_rate = (abs(UNIQUE_USER_ID_COUNT - estimate_unique_user_ids) / UNIQUE_USER_ID_COUNT) * 100
 
-    print(f"Estimated number of unique user IDs: {estimate_unique_user_ids}")
-    print(f"\nActual login attempts: {actual_login_attempts}")
-    print(f"Actual unique user IDs: {actual_unique_user_ids}")
-    print(f"Error: {error_rate:.2f}%")
+    print(f"Estimated number of unique user IDs: {format_number(estimate_unique_user_ids)}")
+    print(f"\nActual login attempts: {format_number(TOTAL_LOGIN_ATTEMPTS, 0)}")
+    print(f"Actual unique user IDs: {format_number(UNIQUE_USER_ID_COUNT, 0)}")
+    print(f"Error: {format_number(error_rate, 2)}%")
     if error_rate <= RELATIVE_STANDARD_ERROR:
         print(
             f"Result: PASS — error_rate is within the expected relative standard error of {RELATIVE_STANDARD_ERROR:.2f}%")
@@ -70,6 +76,8 @@ def count_unique_logins_with_theta_sketch() -> None:
 
 
 def verify_uniform_hash_distribution(login_attempts: list[str]):
+    print(f"\n--- Hash uniformity test (Chi-Squared) ---")
+
     num_bins = 50
     hashes = [hash_user_id_to_unit_interval(uid) for uid in set(login_attempts)]
     observed, bin_edges = numpy.histogram(hashes, bins=num_bins, range=(0.0, 1.0))
@@ -77,9 +85,8 @@ def verify_uniform_hash_distribution(login_attempts: list[str]):
     expected = [expected_count] * num_bins
     chi2, p_value = stats.chisquare(observed, f_exp=expected)
 
-    print(f"\n--- Hash Uniformity Test (Chi-Squared) ---")
-    print(f"Samples: {len(set(login_attempts))}, Bins: {num_bins}")
-    print(f"Chi-squared statistic: {chi2:.4f}")
+    print(f"Samples: {format_number(UNIQUE_USER_ID_COUNT, 0)}, Bins: {format_number(num_bins, 0)}")
+    print(f"Chi-squared statistic: {format_number(chi2)}")
     print(f"p-value: {p_value:.4f}")
     if p_value > 0.05:
         print("Result: PASS — hashes appear uniformly distributed (p > 0.05)")
